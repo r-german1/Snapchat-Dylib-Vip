@@ -1,0 +1,24 @@
+name: Build dylib
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-13
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Theos
+      run: |
+        git clone --recursive https://github.com/theos/theos.git $THEOS
+        echo "THEOS=$THEOS" >> $GITHUB_ENV
+
+    - name: Build Tweak
+      run: |
+        make FINALPACKAGE=1
+
+    - name: Upload dylib
+      uses: actions/upload-artifact@v3
+      with:
+        name: MySnapMod-dylib
+        path: .theos/obj/debug/*.dylib
