@@ -1,0 +1,6 @@
+Package: com.yourname.mysnapmod
+Name: MySnapMod
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Custom Snap Mod created by me
+Maintainer: YuseefSinanMod
