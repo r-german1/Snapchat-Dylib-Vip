@@ -1,70 +1,44 @@
 #import <UIKit/UIKit.h>
 
-// MARK: - Premium / Plus / VIP Hooks
-%hook SCUserSession
-- (BOOL)isPremiumSubscriber {
-    return YES;
+// MARK: - App Lifecycle Hook
+%hook UIViewController
+
+- (void)viewDidAppear:(BOOL)animated {
+    %orig(animated);
+    
+    // Logging for debugging
+    NSLog(@"[MySnapMod] UIViewController successfully loaded: %@", NSStringFromClass([self class]));
 }
-- (BOOL)isPlusSubscriber {
-    return YES;
-}
-- (BOOL)isVIPSubscriber {
-    return YES;
-}
+
 %end
 
-// MARK: - Hide View Story / Snap / Read Message
-%hook SCStorySnapMediaContent
-- (BOOL)shouldSendViewReceipt {
-    return NO;
-}
-%end
+// MARK: - Custom Alert On Launch
+%hook UIApplication
 
-%hook SCChatMessage
-- (BOOL)shouldSendReadReceipt {
-    return NO;
+- (void)applicationDidBecomeActive:(UIApplication *)application {
+    %orig(application);
+    
+    // Dispatch to main thread to safely present UI
+    dispatch_async(dispatch_get_main_queue(), ^{
+        static BOOL hasShownAlert = NO;
+        if (!hasShownAlert) {
+            hasShownAlert = YES;
+            
+            UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
+            if (rootVC) {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"MySnapMod"
+                                                                               message:@"Tweak loaded successfully!"
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                
+                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK"
+                                                                   style:UIAlertActionStyleDefault
+                                                                 handler:nil];
+                [alert addAction:okAction];
+                
+                [rootVC presentViewController:alert animated:YES completion:nil];
+            }
+        }
+    });
 }
-%end
 
-// MARK: - Hide Typing & Online Status
-%hook SCChatTypingHandler
-- (void)sendTypingNotificationForConversation:(id)arg1 isTyping:(BOOL)arg2 {
-    // Hide typing activity
-    %orig(arg1, NO);
-}
-%end
-
-%hook SCUserPresenceManager
-- (BOOL)isUserOnline {
-    return NO;
-}
-%end
-
-// MARK: - Secret Screenshot & Screen Record
-%hook SCUserSession
-- (BOOL)isScreenRecordingAllowed {
-    return YES;
-}
-%end
-
-%hook SCNativeScreenshotDetector
-- (void)userDidTakeScreenshot {
-    // Prevent alerting sender on screenshot
-}
-%end
-
-// MARK: - Auto-Save & Ad-Blocker
-%hook SCAdManager
-- (BOOL)isAdEnabled {
-    return NO;
-}
-- (BOOL)shouldShowStoryAds {
-    return NO;
-}
-%end
-
-%hook SCStoryMediaDownloader
-- (BOOL)shouldAutoSaveMedia {
-    return YES;
-}
 %end
